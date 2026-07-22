@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="citas_server">
+	<include optional="true" location="/opt/ibm/wlp/usr/servers/defaultServer/server_features.xml" />
+	<include optional="true" location="/opt/ibm/wlp/usr/servers/defaultServer/server_definition.xml" />
+	<include optional="true" location="/opt/ibm/wlp/usr/servers/defaultServer/server_datasources.xml" />
+	<include optional="true" location="/opt/ibm/wlp/usr/servers/defaultServer/server_jms.xml" />
+	<include optional="true" location="/opt/ibm/wlp/usr/servers/defaultServer/server_mail.xml" />
+  
+	<applicationManager startTimeout="120s"/>
+
+	<applicationManager autoExpand="true" />
+	<applicationMonitor updateTrigger="mbean" />
+	
+</server>
+

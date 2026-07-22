@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://example.com/citas"
+           targetNamespace="http://example.com/citas"
+           elementFormDefault="qualified">
+
+    <!-- Request: BuscarCitasRequest -->
+    <xs:element name="BuscarCitasRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="pacienteId" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Response: BuscarCitasResponse -->
+    <xs:element name="BuscarCitasResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="cita" type="tns:Cita" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Tipo Cita -->
+    <xs:complexType name="Cita">
+        <xs:sequence>
+            <xs:element name="id" type="xs:long"/>
+            <xs:element name="fecha" type="xs:string"/>
+            <xs:element name="horaInicio" type="xs:string"/>
+            <xs:element name="horaFin" type="xs:string"/>
+            <xs:element name="estado" type="xs:string"/>
+            <xs:element name="nombreMedico" type="xs:string"/>
+            <xs:element name="nombrePaciente" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

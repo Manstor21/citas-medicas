@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="Citas Server">
+
+    <keyStore id="defaultKeyStore" password="changeit"/>
+
+    <ssl id="defaultSSLConfig" keyStoreRef="defaultKeyStore"/>
+
+    <featureManager>
+        <feature>servlet-6.0</feature>
+        <feature>restfulWS-3.1</feature>
+        <feature>jsonb-3.0</feature>
+        <feature>jsonp-2.1</feature>
+        <feature>persistence-3.1</feature>
+        <feature>jdbc-4.2</feature>
+        <feature>microProfile-6.1</feature>
+    </featureManager>
+
+    <httpEndpoint
+            id="defaultHttpEndpoint"
+            httpPort="9080"
+            host="*" />
+    <dataSource id="DefaultDataSource" jndiName="jdbc/citasDS">
+        <jdbcDriver libraryRef="MySQLLib"/>
+        <properties
+                serverName="host.docker.internal"
+                portNumber="3306"
+                databaseName="citas"
+                user="${DB_USER:-root}"
+                password="${DB_PASSWORD}"/>
+    </dataSource>
+
+    <library id="MySQLLib">
+        <fileset
+                dir="/opt/ibm/wlp/usr/shared/resources/"
+                includes="mysql-connector-j-*.jar"/>
+    </library>
+
+    <webContainer deferServletLoad="false"/>
+
+    <logging traceSpecification="*=fine"/>
+
+
+</server>

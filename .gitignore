@@ -1,0 +1,52 @@
+# === BUILD OUTPUT ===
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# === IDE ===
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+.springBeans
+.sts4-cache
+*.swp
+*~
+
+# === MAVEN ===
+.mvn/wrapper/maven-wrapper.jar
+dependency-reduced-pom.xml
+
+# === GRADLE ===
+.gradle/
+build/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+
+# === ENV / SECRETS ===
+.env
+*.env.local
+
+# === LOGS ===
+logs/
+*.log
+
+# === DOCKER (build artifacts) ===
+docker-compose.override.yml
+
+# === SPRING ===
+*.pid
+
+# === PROJECT SPECIFIC ===
+confLiberty/xml/configuration/apps/expanded/

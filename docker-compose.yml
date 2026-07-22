@@ -1,0 +1,13 @@
+services:
+  server:
+    image: websphere-liberty:24.0.0.9-full-java17-openj9
+    container_name: citas-liberty-server
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD:-changeme}
+    volumes:
+      - ./ear:/opt/ibm/wlp/usr/shared/apps/
+      - ./confLiberty/xml/configuration:/opt/ibm/wlp/usr/servers/defaultServer/
+      - ./confLiberty/mysql/:/opt/ibm/wlp/usr/shared/resources/
+    ports:
+      - "9080:9080"
+      - "9443:9443"
