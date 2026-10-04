@@ -67,19 +67,29 @@ Las tablas se crean automaticamente mediante Hibernate (`ddl-auto=update`).
 
 ### 3. Configurar variables de entorno
 
-Definir las variables de entorno para la base de datos:
+Definir las variables de entorno para la base de datos (todas **obligatorias**, sin valor por defecto):
 
 ```bash
 # Linux / macOS
-export DB_PASSWORD=tu_password
-export DB_USER=root
+export DB_URL="jdbc:mysql://localhost:3306/citas?sslMode=VERIFY_IDENTITY&serverTimezone=UTC"
+export DB_USER="mi_usuario_mysql"
+export DB_PASSWORD="mi_password"
+export DB_KEYSTORE_PASSWORD="mi_password_del_keystore"
 
 # Windows (PowerShell)
-$env:DB_PASSWORD="tu_password"
-$env:DB_USER="root"
+$env:DB_URL="jdbc:mysql://localhost:3306/citas?sslMode=VERIFY_IDENTITY&serverTimezone=UTC"
+$env:DB_USER="mi_usuario_mysql"
+$env:DB_PASSWORD="mi_password"
+$env:DB_KEYSTORE_PASSWORD="mi_password_del_keystore"
 ```
 
-> **Nota:** `DB_USER` es opcional, por defecto usa `root`.
+> **Importante:** `DB_URL` debe cifrar el trafico con TLS. `sslMode=VERIFY_IDENTITY` valida ademas
+> el certificado del servidor; no se permite desactivar TLS (`sslMode=DISABLED`).
+> Si MySQL no ofrece un certificado valido para `localhost`, hay que instalar la CA correspondiente
+> y ajustar `trustCertificateKeyStoreUrl`, no relajar la verificacion.
+>
+> `DB_KEYSTORE_PASSWORD` es la contrasena del keystore de Liberty (`confLiberty/xml/server.xml`).
+> No hay ningun valor por defecto en el repositorio.
 
 ### 4. Compilar el proyecto
 
@@ -130,18 +140,24 @@ citas-medicas/
 │           └── server_datasources.xml
 ├── citas-war/
 │   ├── pom.xml
+│   ├── src/main/resources/
+│   │   ├── application.properties      # Config base (sin secretos, sin show-sql)
+│   │   └── application-dev.properties  # Perfil de desarrollo (show-sql=true)
+│   ├── src/test/resources/
+│   │   └── application-test.properties # H2 en memoria para los tests
 │   └── src/main/java/com/example/citas/
 │       ├── CitasApplication.java           # Punto de entrada
+│       ├── SecurityConfig.java             # SecurityFilterChain + PasswordEncoder (bcrypt)
 │       ├── ServletInitializer.java         # Inicializador para WAR en Liberty
 │       ├── controller/
-│       │   ├── AuthController.java         # Login (POST /auth/login)
+│       │   ├── AuthController.java         # Login (POST /auth/login, cuerpo JSON)
 │       │   └── CitaController.java         # CRUD de citas
 │       ├── service/
 │       │   ├── CitaService.java            # Interfaz de servicio de citas
 │       │   ├── UsuarioService.java         # Interfaz de servicio de usuarios
 │       │   └── interfaces/impl/
 │       │       ├── CitaServiceImpl.java    # Logica de negocio de citas
-│       │       └── UsuarioServiceImpl.java # Logica de login
+│       │       └── UsuarioServiceImpl.java # Unica ruta de verificacion de credenciales
 │       ├── persistence/entity/
 │       │   ├── Usuario.java                # Entidad usuario (medico/paciente)
 │       │   ├── Cita.java                   # Entidad cita
@@ -152,10 +168,12 @@ citas-medicas/
 │       │   └── JornadaMedicoRepository.java
 │       ├── security/
 │       │   ├── JwtUtil.java                # Generacion/validacion JWT
-│       │   └── JwtFilter.java              # Filtro de autenticacion
+│       │   ├── JwtFilter.java              # Filtro de autenticacion
+│       │   └── PasswordService.java        # bcrypt + migracion desde texto plano
 │       ├── dto/
 │       │   ├── CitaDTO.java
 │       │   ├── UsuarioDTO.java
+│       │   ├── LoginRequestDTO.java
 │       │   └── LoginResponseDTO.java
 │       ├── soap/
 │       │   ├── config/WebServiceConfig.java     # Config SOAP
@@ -183,7 +201,26 @@ Authorization: Bearer <token_jwt>
 
 | Metodo | Endpoint | Descripcion | Auth |
 |--------|----------|-------------|------|
-| `POST` | `/auth/login?email=...&password=...` | Iniciar sesion, devuelve token JWT | No |
+| `POST` | `/auth/login` | Iniciar sesion (cuerpo JSON), devuelve token JWT | No |
+
+**Cuerpo de la peticion (JSON):**
+```json
+{
+  "email": "usuario@ejemplo.com",
+  "password": "mi_password"
+}
+```
+
+**Ejemplo con curl:**
+```bash
+curl -X POST http://localhost:9080/citas/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"usuario@ejemplo.com","password":"mi_password"}'
+```
+
+> La contrasena se recibe **unicamente en el cuerpo JSON**. Ya no se acepta por query string
+> (`?email=...&password=...`) para no exponerla en logs de acceso, historial del navegador ni
+> `Referer`. Un cuerpo vacio o ausente responde `401`.
 
 **Respuesta exitosa:**
 ```json
@@ -249,16 +286,44 @@ http://localhost:9080/citas/herme-wss-api/citas
 
 ### Variables de Entorno
 
+Ninguna tiene valor por defecto: si falta alguna, la aplicacion falla al arrancar.
+
 | Variable | Descripcion | Por defecto |
 |----------|-------------|-------------|
+| `DB_URL` | URL JDBC de MySQL **con TLS** (ver ejemplo) | _(requerida)_ |
+| `DB_USER` | Usuario de MySQL | _(requerida)_ |
 | `DB_PASSWORD` | Contrasena de MySQL | _(requerida)_ |
-| `DB_USER` | Usuario de MySQL | `root` |
+| `DB_KEYSTORE_PASSWORD` | Contrasena del keystore de Liberty (`server.xml`) | _(requerida)_ |
 
 ### Base de datos
 
-- **URL**: `jdbc:mysql://localhost:3306/citas`
-- **Usuario**: `root`
+- **URL**: la que se pase en `DB_URL`, por ejemplo
+  `jdbc:mysql://localhost:3306/citas?sslMode=VERIFY_IDENTITY&serverTimezone=UTC`
+- **Usuario**: el que se pase en `DB_USER`
 - **DDL**: `update` (Hibernate crea/actualiza tablas automaticamente)
+- **TLS**: obligatorio. `sslMode=VERIFY_IDENTITY` cifra el trafico y valida el certificado.
+  No se admiten modos que deshabiliten el cifrado ni la recuperacion de la clave publica del servidor.
+
+### Contrasenas
+
+- Las contrasenas se almacenan hasheadas con **bcrypt** (`app.security.bcrypt.strength`, 10 por defecto).
+- Las bases de datos historicas guardan la contrasena en texto plano: el login las acepta y
+  **migra de forma transparente** a bcrypt en el primer inicio de sesion correcto de cada usuario
+  (`PasswordService.upgradeIfNeeded`). Un login fallido nunca modifica el valor almacenado.
+- Los tests cubren esta migracion con H2 en memoria (`@ActiveProfiles("test")`).
+
+### Depuracion (SQL en consola)
+
+`show-sql` esta **desactivado por defecto** para no filtrar estructura ni datos en produccion.
+Para activarlo, usar el perfil `dev`:
+
+```bash
+# Spring Boot
+mvn -pl citas-war spring-boot:run "-Dspring-boot.run.profiles=dev"
+
+# WAR ya compilado
+java -jar citas.war --spring.profiles.active=dev
+```
 
 ### Puertos
 
@@ -277,7 +342,7 @@ Usuario (Usuarios)
 ├── apellidos (String)
 ├── dni (String, formato: 8 digitos + letra)
 ├── email (String, unico)
-├── password (String)
+├── password (String, hash bcrypt)
 └── roles (Set<String>)  → "MEDICO" | "PACIENTE"
 
 Cita (Citas)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <server description="Citas Server">
 
-    <keyStore id="defaultKeyStore" password="changeit"/>
+    <keyStore id="defaultKeyStore" password="${DB_KEYSTORE_PASSWORD}"/>
 
     <ssl id="defaultSSLConfig" keyStoreRef="defaultKeyStore"/>
 
@@ -25,7 +25,7 @@
                 serverName="host.docker.internal"
                 portNumber="3306"
                 databaseName="citas"
-                user="${DB_USER:-root}"
+                user="${DB_USER}"
                 password="${DB_PASSWORD}"/>
     </dataSource>
 
