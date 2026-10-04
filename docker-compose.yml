@@ -3,7 +3,9 @@ services:
     image: websphere-liberty:24.0.0.9-full-java17-openj9
     container_name: citas-liberty-server
     environment:
-      - DB_PASSWORD=${DB_PASSWORD:-changeme}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_KEYSTORE_PASSWORD=${DB_KEYSTORE_PASSWORD}
     volumes:
       - ./ear:/opt/ibm/wlp/usr/shared/apps/
       - ./confLiberty/xml/configuration:/opt/ibm/wlp/usr/servers/defaultServer/
