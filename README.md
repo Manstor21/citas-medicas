@@ -1,5 +1,12 @@
 # Citas Medicas API
 
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Java](https://img.shields.io/badge/Java-17-orange)](https://adoptium.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.9-6db33f)](https://spring.io/projects/spring-boot)
+[![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1)](https://www.mysql.com/)
+[![WebSphere Liberty](https://img.shields.io/badge/WebSphere_Liberty-24.0.0.9-8A2BE2)](https://www.ibm.com/products/open-liberty)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)](https://www.docker.com/)
+
 Sistema de gestion de citas medicas entre medicos y pacientes, con autenticacion JWT, API REST y servicio SOAP.
 
 ## Stack Tecnologico
